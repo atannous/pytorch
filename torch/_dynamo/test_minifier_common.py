@@ -1,3 +1,4 @@
+import copy
 import dataclasses
 import io
 import logging
@@ -96,8 +97,8 @@ torch._inductor.config.{"cpp" if device == "cpu" else "triton"}.inject_relu_bug_
 
             # NB: Can't use save_config because that will omit some fields,
             # but we must save and reset ALL fields
-            dynamo_config = torch._dynamo.config._config.copy()
-            inductor_config = torch._inductor.config._config.copy()
+            dynamo_config = copy.copy(torch._dynamo.config)
+            inductor_config = copy.copy(torch._inductor.config)
             try:
                 stderr = io.StringIO()
                 log_handler = logging.StreamHandler(stderr)
@@ -121,8 +122,8 @@ torch._inductor.config.{"cpp" if device == "cpu" else "triton"}.inject_relu_bug_
                     # around
                     torch._dynamo.reset()
             finally:
-                object.__setattr__(torch._dynamo.config, "_config", dynamo_config)
-                object.__setattr__(torch._inductor.config, "_config", inductor_config)
+                object.__setattr__(torch._dynamo, "config", dynamo_config)
+                object.__setattr__(torch._inductor, "config", inductor_config)
 
             # TODO: return a more appropriate data structure here
             return subprocess.CompletedProcess(
